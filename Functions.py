@@ -1,5 +1,6 @@
 from astropy.io import fits
 import numpy as np
+from scipy.optimize import curve_fit
 
 
 
@@ -218,6 +219,40 @@ def gauss_2d(coords, amp, x0, y0, sigx, sigy):
     g = amp * np.exp(-(term1 + term2))
     return g.ravel()
 
+
+def square_aperture(data, center, box_size):
+    """
+    Extract a square cutout from the input data
+
+    Parameters:
+    -----------
+    data : `np.ndarray`
+        the input data
+    center : list or tuple
+        the center of the box to extract, in y-x order
+    box_size : int
+        the size of the box in pixels
+
+    Returns:
+    -----------
+    res : `np.ndarray`
+        a cutout of the data
+    """
+
+    y, x = map(int, center)
+
+    # ensure the box_size is odd
+    if box_size % 2 == 0:
+        box_size += 1
+
+    half = box_size // 2
+
+    # use slices
+    sly = slice(y - half, y + half + 1)
+    slx = slice(x - half, x + half + 1)
+
+    return data[sly, slx]
+
 def fit_gauss_2d(data, init_par=None):
     """ a fitting routine for a 2d gaussian function """
 
@@ -238,3 +273,18 @@ def fit_gauss_2d(data, init_par=None):
     )
 
     return popt, pcov
+
+def moment_1(data):
+    """ get the intensity weighted centroid of an image """
+    y, x = np.indices(data.shape)
+    x0 = np.sum(x * data) / data.sum()
+    y0 = np.sum(y * data) / data.sum()
+    return x0, y0
+
+def moment_2(data):
+    """ get the second moment to estimate the peak width """
+    y, x = np.indices(data.shape)
+    x0, y0 = moment_1(data)
+    sigx = np.sqrt(np.sum(((x - x0)**2) * data) / data.sum())
+    sigy = np.sqrt(np.sum(((y - y0)**2) * data) / data.sum())
+    return sigx, sigy

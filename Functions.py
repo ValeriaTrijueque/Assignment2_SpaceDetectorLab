@@ -1,11 +1,25 @@
 from astropy.io import fits
 import numpy as np
 from scipy.optimize import curve_fit
+from scipy.ndimage import gaussian_filter, convolve 
+from scipy.ndimage import maximum_filter
 
+##THIS SCRIPT CONTAINS THE FUNCTIONS USED FOR THE PROCESSING AND CALIBRATION OF THE HST RAW FILES
 
+def obtain_files(name, folder): 
+    """
+    Obtain the files from a specific folder
 
-#Function to obtain files from the specific folder: inputs: name of the data and folder #from where you want the data
-def obtain_files(name, folder): #Name of the file you want to obtain, Folder from where you want to obtain file
+    Parameters:
+    -----------
+    name : string - name of the file
+    folder: path to the folder with the file
+
+    Returns:
+    -----------
+    files : path to file
+    """
+
     library= {
         "raw" : next(folder.rglob("*_raw.fits")),
         "bias" : next(folder.rglob("*_biasfile.fits")),
@@ -17,8 +31,21 @@ def obtain_files(name, folder): #Name of the file you want to obtain, Folder fro
     files= library[name]
     return files
 
-#Function to obtain data from the desire file
+
 def obtain_data(name, file):
+    """
+    Extract the required data from the files to compute calibration 
+
+    Parameters:
+    -----------
+    name : string - this is done for the raw and blev files of HSTubai2505m and  
+    HSTubai2508m since data is not obtained in hdul[1].data, but in hdul[0].data
+    file: path to file
+
+    Returns:
+    -----------
+    data :  `array` - data from the file
+    """
     if name != "raw" and name!= "blev":
         with fits.open(file) as hdul:
             data = hdul[0].data
@@ -27,20 +54,58 @@ def obtain_data(name, file):
             data = hdul[1].data
     return data
 
-#Calculate exposure time
+
 def exp_time(file_raw):
+    """
+    Extract the exposure time from the raw file
+    
+    Parameters:
+    -----------
+    file_raw : path to raw file
+
+    Returns:
+    -----------
+    exp_time : 'float' - exposure time
+    """
     with fits.open(file_raw) as hdul:
         exp_time = hdul[0].header.get('EXPTIME',0.0)
     return exp_time
 
-#Function to mask raw data
+
 def masking(data_mask, raw_data): 
-    condition = (data_mask == 0) | (data_mask == 256) #remove bad pixels, to provide better data, but not questionable pixels, since it is not necessary and removes a lot of data, creating lines 
+    """
+    Mapping the bad pixels: 0 represents good pixel, 2 bad/defective pixel and 256 
+    questionable pixel. - the questionable pixels are not mapped, because a lot of             information is lost, producing bad quality images. It was decided to map just the          bad/defective pixels.
+    
+    Parameters:
+    -----------
+    data_mask : 'array' mask data
+    raw_data : 'array' raw data
+
+    Returns:
+    -----------
+    masked_raw : 'array' - masked raw data
+    """
+    condition = (data_mask == 0) | (data_mask == 256) #remove bad pixels, to provide better data, but not questionable pixels, since it is not necessary and removes a lot of data from the image, creating vertical lines at the top of the image
     masked_raw = np.where(condition, raw_data, np.nan)
     return masked_raw
 
-#Function to apply the blev data
-def apply_blev(data_blev, raw_data,difference):
+    
+
+def apply_blev(data_blev, mask,difference):
+    """
+    Ensure positive bits to avoid saturation of pixels and loss of data. Use overscan          regions of chips, make the mean of the odd and even regions and substract them to the      odd and even columns of the masked data.
+    
+    Parameters:
+    -----------
+    data_blev : 'array' blev data
+    mask : 'array' masked raw data
+    difference : string - this is used for the blev data in HSTubai2508m since the shape       of the array is shape=(4, 800, 14), so data_blev[0] needs to be applied.
+
+    Returns:
+    -----------
+    corrected_raw_data : 'array' - data with applied blev file
+    """
     if difference == "blev7":
         overscan_region = data_blev[0][9:790, 8:14]
     else:
@@ -49,30 +114,78 @@ def apply_blev(data_blev, raw_data,difference):
     even = overscan_region[:, 1::2]
     mean_odd = np.mean(odd)
     mean_even =  np.mean(even)
-    corrected_raw_data = raw_data.copy()
-    corrected_raw_data[:, 0::2] = raw_data[:, 0::2] - mean_odd
-    corrected_raw_data[:, 1::2] = raw_data[:, 1::2] - mean_even
+    corrected_raw_data = mask.copy()
+    corrected_raw_data[:, 0::2] = mask[:, 0::2] - mean_odd
+    corrected_raw_data[:, 1::2] = mask[:, 1::2] - mean_even
     return corrected_raw_data
 
-#Function to apply bias data
+
 def apply_bias(data_bias, corrected_raw_data):
+    """
+    Substract the bias, which compensates for readout noise, data from the                     corrected_raw_data
+    
+    Parameters:
+    -----------
+    data_bias : 'array' bias data
+    corrected_raw_data : 'array' masked raw data with applied blev
+    
+    Returns:
+    -----------
+    bias_correct : 'array' - corrected data from bias
+    """
     bias_correct = corrected_raw_data-data_bias
     bias_correct
     return bias_correct
 
-#Function to apply dark data
+
 def apply_dark(data_dark, bias_correct, exp_time):
+    """
+    Multiply the dark data, which accounts for thermal noise, by the eposure time to then      substract it from the bias corrected image.
+    
+    Parameters:
+    -----------
+    data_dark : 'array' dark data
+    bias_correct : 'array' bias corrected image.
+    exp_time: 'float' emposure time
+    
+    Returns:
+    -----------
+    dark_correct : 'array' - dark or thermal noise corrected image
+    """
     dark_correct = bias_correct-(data_dark*exp_time)
     dark_correct
     return dark_correct
 
-#Function to apply flat data
+
 def apply_flat(data_flat, dark_correct):
+    """
+    Flat data accounts for pixel sensitivity variation across detector. Multiply the flat      data to the dark corrected image.
+    
+    Parameters:
+    -----------
+    data_flat : 'array' flat data
+    dark_correct : 'array' dark corrected image
+    
+    Returns:
+    -----------
+    flat_correct : 'array' - flat corrected image
+    """
     flat_correct = dark_correct*data_flat
     return flat_correct
 
-#Function to remove the sky
-def calculate_mean_and_stndev(flat_correct): # It's okay (Check)
+
+def calculate_mean_and_stndev(flat_correct): 
+    """
+    Estimate the sky contribution to substract it from the flat corrected image. The sky       contribution is estimated by calculating the mean and standard deviation, to then make     the median of pixels with a value greater than (mean-3*standev) and smaller than           (mean+3*standev).
+    
+    Parameters:
+    -----------
+    flat_correct : 'array' flat corrected image
+    
+    Returns:
+    -----------
+    sky_corr : 'float' - sky corrected image
+    """
     sum = 0
     sum2 = 0
     for i in flat_correct:
@@ -82,21 +195,48 @@ def calculate_mean_and_stndev(flat_correct): # It's okay (Check)
     for i in flat_correct:
         sum2 += (i - mean)**2
     standev = ((1/(n-1))*(sum2))**0.5
-    condition = ((mean-3*standev)> flat_correct) &  (flat_correct<(mean+3*standev))
+    condition = ((mean-3*standev)< flat_correct) &  (flat_correct<(mean+3*standev))
     sky = np.median(condition)
     sky_corr = flat_correct - sky
     return sky_corr
 
 
 def flux(exp_time, PHOTOFLAM, skycorr_data):
-    count = skycorr_data/exp_time
-    image = count * PHOTOFLAM
+    """
+    Converts image data from pixel, into energy flux density units.
+    
+    Parameters:
+    -----------
+    exp_time : 'float' exposure time
+    PHOTOFLAM : 'float' Inverse Sensitivity
+    skycorr_data : 'array' sky corrected image
+    
+    Returns:
+    -----------
+    image : 'float' - energy flux image
+    """
+    count = skycorr_data/exp_time #calculate count rate
+    image = count * PHOTOFLAM 
     return image
 
-def magnitude(fluxdata,PHOTZPT):
-    magnitude = -2.5*np.log(fluxdata) + PHOTZPT
+def magnitude(fluxdata,PHOTZPT,ZP_CORR):
+    """
+    Calculate astronomical magnitude or brightness.
+
+    Parameters:
+    -----------
+    fluxdata : 'array' flat corrected image
+    PHOTZPT : Zero point
+    ZP_CORR : Delta magnitude correction for contamination
+    
+    Returns:
+    -----------
+    sky_corr : 'array' - magnitude
+    """
+    magnitude = -2.5*np.log10(fluxdata) + PHOTZPT+ZP_CORR
     return magnitude
 
+# FUNCTION OBTAINED FROM HST WORKSHOP - DONE BY LECTURE ANDREW KIRMAN
 def histogram(ax, x, bins=100, xrange=None, density=False,
               normed=True, histtype='step', **kwargs):
     """
@@ -137,6 +277,16 @@ def histogram(ax, x, bins=100, xrange=None, density=False,
         bin_edges[:-1], bin_edges, weights=counts, histtype=histtype, **kwargs
     )
 
+# FUNCTION OBTAINED FROM HST WORKSHOP - DONE BY LECTURE ANDREW KIRMAN
+def get_local_max(data, nsize=10):
+    """ apply a maximum filter to extract coordinates """
+    local_max = maximum_filter(data, size=nsize)
+    local_max_mask = (local_max == data)
+    coordinates = np.argwhere(local_max_mask)
+    print(f"The maximum_filter found {len(coordinates)} possible sources")
+    return coordinates
+
+# FUNCTION OBTAINED FROM HST WORKSHOP - DONE BY LECTURE ANDREW KIRMAN
 def normalize_data(x, pmin=None, pmax=None):
     """
     normalize data between 0 and 1, optionally clipping the original data
@@ -177,7 +327,8 @@ def normalize_data(x, pmin=None, pmax=None):
     # make sure it's definitely between 0 and 1
     return np.clip(norm, 0, 1)
 
-    
+
+# FUNCTION OBTAINED FROM HST WORKSHOP - DONE BY LECTURE ANDREW KIRMAN
 def transform_by(func, x, pmin=None, pmax=None):
     """
     transform/stretch the data by a named function,
@@ -211,6 +362,7 @@ def transform_by(func, x, pmin=None, pmax=None):
     else:
         raise ValueError("Unsupported function: ", func)
 
+# FUNCTION OBTAINED FROM HST WORKSHOP - DONE BY LECTURE ANDREW KIRMAN
 def gauss_2d(coords, amp, x0, y0, sigx, sigy):
     """ return a 2d gaussian evaluation """
     y, x = coords
@@ -219,7 +371,7 @@ def gauss_2d(coords, amp, x0, y0, sigx, sigy):
     g = amp * np.exp(-(term1 + term2))
     return g.ravel()
 
-
+# FUNCTION OBTAINED FROM HST WORKSHOP - DONE BY LECTURE ANDREW KIRMAN
 def square_aperture(data, center, box_size):
     """
     Extract a square cutout from the input data
@@ -253,6 +405,7 @@ def square_aperture(data, center, box_size):
 
     return data[sly, slx]
 
+# FUNCTION OBTAINED FROM HST WORKSHOP - DONE BY LECTURE ANDREW KIRMAN
 def fit_gauss_2d(data, init_par=None):
     """ a fitting routine for a 2d gaussian function """
 
@@ -274,6 +427,7 @@ def fit_gauss_2d(data, init_par=None):
 
     return popt, pcov
 
+# FUNCTION OBTAINED FROM HST WORKSHOP - DONE BY LECTURE ANDREW KIRMAN
 def moment_1(data):
     """ get the intensity weighted centroid of an image """
     y, x = np.indices(data.shape)
@@ -281,6 +435,7 @@ def moment_1(data):
     y0 = np.sum(y * data) / data.sum()
     return x0, y0
 
+# FUNCTION OBTAINED FROM HST WORKSHOP - DONE BY LECTURE ANDREW KIRMAN
 def moment_2(data):
     """ get the second moment to estimate the peak width """
     y, x = np.indices(data.shape)

@@ -364,7 +364,17 @@ def transform_by(func, x, pmin=None, pmax=None):
 
 # FUNCTION OBTAINED FROM HST WORKSHOP - DONE BY LECTURE ANDREW KIRMAN
 def gauss_2d(coords, amp, x0, y0, sigx, sigy):
-    """ return a 2d gaussian evaluation """
+    """ return a 2d gaussian evaluation 
+    
+    Parameters:
+    -----------
+    coords : `list` coordinates
+    amp, x0, y0, sigx, sigy: best fit parameters 
+
+    Returns:
+    -----------
+    g.ravel() : `np.ndarray` fitted gaussian
+    """
     y, x = coords
     term1 = (x - x0)**2 / (2 * sigx**2)
     term2 = (y - y0)**2 / (2 * sigy**2)
@@ -407,7 +417,20 @@ def square_aperture(data, center, box_size):
 
 # FUNCTION OBTAINED FROM HST WORKSHOP - DONE BY LECTURE ANDREW KIRMAN
 def fit_gauss_2d(data, init_par=None):
-    """ a fitting routine for a 2d gaussian function """
+    """
+    Compute the optimal or best fit parameters from the 2d gaussian fitting
+
+    Parameters:
+    -----------
+    data : `np.ndarray`
+        the input data
+    init_par : initial parameters
+
+    Returns:
+    -----------
+    popt : 'float' best fit or optimal parameters
+    pcov: 'float' uncertinties
+    """
 
     res = data.copy()
     res[res < 0] = 0.

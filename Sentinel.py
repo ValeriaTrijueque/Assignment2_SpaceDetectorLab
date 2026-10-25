@@ -40,3 +40,4 @@ def comparition_stats(data):
         "Max": np.max(data)
     }
     return stats
+

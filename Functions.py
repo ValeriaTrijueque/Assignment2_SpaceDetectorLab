@@ -462,3 +462,15 @@ def moment_2(data):
     sigx = np.sqrt(np.sum(((x - x0)**2) * data) / data.sum())
     sigy = np.sqrt(np.sum(((y - y0)**2) * data) / data.sum())
     return sigx, sigy
+
+# FUNCTION OBTAINED FROM HST WORKSHOP 
+def comparition_stats(data):
+    "prints out statistics to compare quantitatively"
+    stats = {
+        "Mean": np.mean(data),
+        "Median": np.median(data),
+        "Std Dev": np.std(data),
+        "Min": np.min(data),
+        "Max": np.max(data)
+    }
+    return stats

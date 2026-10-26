@@ -31,7 +31,7 @@ The comparition was achieved by using histograms, calculating possible sources f
 
 
 IMPORTANT
-There are three Jupyter notebooks inside the folder called: HSTubai2505m, HSTubai2507m, HSTubai2508m. In each of these notebooks the respective exposures from Huble Space Telescope are calibrated and compared with the science-ready images. (All exposures files can be found inside the "calibration" folder of the hst-data, and the science-ready files are found inside the "F336W" folder). This was done to prioritise organisation and provide a clean and easy to understand code. 
+There are three Jupyter notebooks inside the folder called: HSTubai2505m, HSTubai2507m, HSTubai2508m. In each of these notebooks the respective exposures from Huble Space Telescope are calibrated and compared with the science-ready images. (All exposures files can be found inside the "calibration" folder of the hst-data, and the science-ready files are found inside the "F336W" folder of the hst-data). This was done to prioritise organisation and provide a clean and easy to understand code. 
 In addition, a python script named "Functions" can also be found in the same place as the Jupyter notebooks. This script contains all the functions used to calibrate the data and do all the quantitative process and analysis.
 
 
@@ -41,7 +41,7 @@ In this part of the assignment the Hunga Tonga volcano was analysed using sentin
 SENTINEL-2:
 The Sentinel-2 provides images of the volcano in 2017, 2018 and 2019 years. From these images the area covered in vegetation was calculated for each year and plotted in a graph as a function of time. Given that no volcano eruption occurred during those 3 years, sentinel-2 images are used to analyse the growth in vegetation during that time. This was achieved by applying a mask of the vegetation to the images and calculating the pixel size. 
 
-The pixel size is first converted into meters from angular units. Once the width and height of the pixels are obtained, the area of a pixel can be calculated. Knowing the pixel size and the pixels containing the vegetation information, the area covered in vegetation can be obtained by multiplying both values together.
+The pixel size is first converted into meters from angular units. Once the width and height of the pixels are obtained in meters, the area of a pixel can be calculated. Knowing the pixel size and the pixels containing the vegetation information, the area covered in vegetation can be obtained by multiplying both values together.
 
 After obtaining all this information, the results were compared with the vegetation image provided by Sentinel-2 "Sentinel-2_L2A_NDVI", performing some statistical analysis of the mean, median, standard deviation and minimum and maximum of both.
 

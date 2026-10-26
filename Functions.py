@@ -99,7 +99,7 @@ def apply_blev(data_blev, mask,difference):
     -----------
     data_blev : 'array' blev data
     mask : 'array' masked raw data
-    difference : string - this is used for the blev data in HSTubai2508m since the shape of the array is shape=(4, 800, 14), so data_blev[0] needs to be applied.
+    difference : string - this is used for the blev data in HSTubai2507m since the shape of the array is shape=(4, 800, 14), so data_blev[0] needs to be applied.
 
     Returns:
     -----------
@@ -121,7 +121,7 @@ def apply_blev(data_blev, mask,difference):
 
 def apply_bias(data_bias, corrected_raw_data):
     """
-    Substract the bias, which compensates for readout noise, data from the corrected_raw_data
+    Substract the bias, which compensates for readout noise, from the corrected_raw_data
     
     Parameters:
     -----------
@@ -130,7 +130,7 @@ def apply_bias(data_bias, corrected_raw_data):
     
     Returns:
     -----------
-    bias_correct : 'array' - corrected data from bias
+    bias_correct : 'array' - bias corrected image
     """
     bias_correct = corrected_raw_data-data_bias
     return bias_correct
@@ -151,7 +151,6 @@ def apply_dark(data_dark, bias_correct, exp_time):
     dark_correct : 'array' - dark or thermal noise corrected image
     """
     dark_correct = bias_correct-(data_dark*exp_time)
-    dark_correct
     return dark_correct
 
 
@@ -211,7 +210,7 @@ def flux(exp_time, PHOTOFLAM, skycorr_data):
     
     Returns:
     -----------
-    image : 'float' - energy flux image
+    image : 'array' - energy flux image
     """
     count = skycorr_data/exp_time #calculate count rate
     image = count * PHOTOFLAM 
@@ -224,8 +223,8 @@ def magnitude(fluxdata,PHOTZPT,ZP_CORR):
     Parameters:
     -----------
     fluxdata : 'array' flat corrected image
-    PHOTZPT : Zero point
-    ZP_CORR : Delta magnitude correction for contamination
+    PHOTZPT : 'float' Zero point
+    ZP_CORR : 'float' Delta magnitude correction for contamination
     
     Returns:
     -----------

@@ -33,7 +33,7 @@ def readata(file, number):
     Parameters:
     -----------
     file : 'array' - file
-    number: number of the file from the list you can to read the data 
+    number: number of the file from the list you want to read the data from
 
     Returns:
     -----------

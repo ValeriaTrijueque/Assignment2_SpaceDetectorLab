@@ -74,8 +74,7 @@ def exp_time(file_raw):
 
 def masking(data_mask, raw_data): 
     """
-    Mapping the bad pixels: 0 represents good pixel, 2 bad/defective pixel and 256 
-    questionable pixel. - the questionable pixels are not mapped, because a lot of             information is lost, producing bad quality images. It was decided to map just the          bad/defective pixels.
+    Mapping the bad pixels: 0 represents good pixel, 2 bad/defective pixel and 256 questionable pixel. - the questionable pixels are not mapped, because a lot of information is lost, producing bad quality images. It was decided to map just the bad/defective pixels.
     
     Parameters:
     -----------
@@ -94,13 +93,13 @@ def masking(data_mask, raw_data):
 
 def apply_blev(data_blev, mask,difference):
     """
-    Ensure positive bits to avoid saturation of pixels and loss of data. Use overscan          regions of chips, make the mean of the odd and even regions and substract them to the      odd and even columns of the masked data.
+    Ensure positive bits to avoid saturation of pixels and loss of data. Use overscan regions of chips, make the mean of the odd and even regions and substract them to the odd and even columns of the masked data.
     
     Parameters:
     -----------
     data_blev : 'array' blev data
     mask : 'array' masked raw data
-    difference : string - this is used for the blev data in HSTubai2508m since the shape       of the array is shape=(4, 800, 14), so data_blev[0] needs to be applied.
+    difference : string - this is used for the blev data in HSTubai2508m since the shape of the array is shape=(4, 800, 14), so data_blev[0] needs to be applied.
 
     Returns:
     -----------
@@ -122,7 +121,7 @@ def apply_blev(data_blev, mask,difference):
 
 def apply_bias(data_bias, corrected_raw_data):
     """
-    Substract the bias, which compensates for readout noise, data from the                     corrected_raw_data
+    Substract the bias, which compensates for readout noise, data from the corrected_raw_data
     
     Parameters:
     -----------
@@ -140,7 +139,7 @@ def apply_bias(data_bias, corrected_raw_data):
 
 def apply_dark(data_dark, bias_correct, exp_time):
     """
-    Multiply the dark data, which accounts for thermal noise, by the eposure time to then      substract it from the bias corrected image.
+    Multiply the dark data, which accounts for thermal noise, by the eposure time to then substract it from the bias corrected image.
     
     Parameters:
     -----------
@@ -159,7 +158,7 @@ def apply_dark(data_dark, bias_correct, exp_time):
 
 def apply_flat(data_flat, dark_correct):
     """
-    Flat data accounts for pixel sensitivity variation across detector. Multiply the flat      data to the dark corrected image.
+    Flat data accounts for pixel sensitivity variation across detector. Multiply the flat data to the dark corrected image.
     
     Parameters:
     -----------
@@ -176,7 +175,7 @@ def apply_flat(data_flat, dark_correct):
 
 def calculate_mean_and_stndev(flat_correct): 
     """
-    Estimate the sky contribution to substract it from the flat corrected image. The sky       contribution is estimated by calculating the mean and standard deviation, to then make     the median of pixels with a value greater than (mean-3*standev) and smaller than           (mean+3*standev).
+    Estimate the sky contribution to substract it from the flat corrected image. The sky contribution is estimated by calculating the mean and standard deviation, to then make the median of pixels with a value greater than (mean-3*standev) and smaller than (mean+3*standev).
     
     Parameters:
     -----------
@@ -236,12 +235,11 @@ def magnitude(fluxdata,PHOTZPT,ZP_CORR):
     magnitude = -2.5*np.log10(fluxdata) + PHOTZPT+ZP_CORR
     return magnitude
 
-# FUNCTION OBTAINED FROM HST WORKSHOP - DONE BY LECTURE ANDREW KIRMAN
+# FUNCTION OBTAINED FROM HST WORKSHOP 
 def histogram(ax, x, bins=100, xrange=None, density=False,
               normed=True, histtype='step', **kwargs):
     """
-    compute and plot a histogram from some given data, correctly
-    handling normalization
+    compute and plot a histogram from some given data, correctly handling normalization
 
     Parameters:
     -----------
@@ -277,7 +275,7 @@ def histogram(ax, x, bins=100, xrange=None, density=False,
         bin_edges[:-1], bin_edges, weights=counts, histtype=histtype, **kwargs
     )
 
-# FUNCTION OBTAINED FROM HST WORKSHOP - DONE BY LECTURE ANDREW KIRMAN
+# FUNCTION OBTAINED FROM HST WORKSHOP
 def get_local_max(data, nsize=10):
     """ apply a maximum filter to extract coordinates """
     local_max = maximum_filter(data, size=nsize)
@@ -286,11 +284,10 @@ def get_local_max(data, nsize=10):
     print(f"The maximum_filter found {len(coordinates)} possible sources")
     return coordinates
 
-# FUNCTION OBTAINED FROM HST WORKSHOP - DONE BY LECTURE ANDREW KIRMAN
+# FUNCTION OBTAINED FROM HST WORKSHOP 
 def normalize_data(x, pmin=None, pmax=None):
     """
-    normalize data between 0 and 1, optionally clipping the original data
-    between user-specified min/max values, or percentiles
+    normalize data between 0 and 1, optionally clipping the original data between user-specified min/max values, or percentiles
 
     Parameters:
     -----------
@@ -328,11 +325,10 @@ def normalize_data(x, pmin=None, pmax=None):
     return np.clip(norm, 0, 1)
 
 
-# FUNCTION OBTAINED FROM HST WORKSHOP - DONE BY LECTURE ANDREW KIRMAN
+# FUNCTION OBTAINED FROM HST WORKSHOP 
 def transform_by(func, x, pmin=None, pmax=None):
     """
-    transform/stretch the data by a named function,
-    normalizing the data if necessary
+    transform/stretch the data by a named function, normalizing the data if necessary
     
     Parameters:
     -----------
@@ -362,7 +358,7 @@ def transform_by(func, x, pmin=None, pmax=None):
     else:
         raise ValueError("Unsupported function: ", func)
 
-# FUNCTION OBTAINED FROM HST WORKSHOP - DONE BY LECTURE ANDREW KIRMAN
+# FUNCTION OBTAINED FROM HST WORKSHOP 
 def gauss_2d(coords, amp, x0, y0, sigx, sigy):
     """ return a 2d gaussian evaluation 
     
@@ -381,7 +377,7 @@ def gauss_2d(coords, amp, x0, y0, sigx, sigy):
     g = amp * np.exp(-(term1 + term2))
     return g.ravel()
 
-# FUNCTION OBTAINED FROM HST WORKSHOP - DONE BY LECTURE ANDREW KIRMAN
+# FUNCTION OBTAINED FROM HST WORKSHOP
 def square_aperture(data, center, box_size):
     """
     Extract a square cutout from the input data
@@ -415,7 +411,7 @@ def square_aperture(data, center, box_size):
 
     return data[sly, slx]
 
-# FUNCTION OBTAINED FROM HST WORKSHOP - DONE BY LECTURE ANDREW KIRMAN
+# FUNCTION OBTAINED FROM HST WORKSHOP
 def fit_gauss_2d(data, init_par=None):
     """
     Compute the optimal or best fit parameters from the 2d gaussian fitting
@@ -450,7 +446,7 @@ def fit_gauss_2d(data, init_par=None):
 
     return popt, pcov
 
-# FUNCTION OBTAINED FROM HST WORKSHOP - DONE BY LECTURE ANDREW KIRMAN
+# FUNCTION OBTAINED FROM HST WORKSHOP 
 def moment_1(data):
     """ get the intensity weighted centroid of an image """
     y, x = np.indices(data.shape)
@@ -458,7 +454,7 @@ def moment_1(data):
     y0 = np.sum(y * data) / data.sum()
     return x0, y0
 
-# FUNCTION OBTAINED FROM HST WORKSHOP - DONE BY LECTURE ANDREW KIRMAN
+# FUNCTION OBTAINED FROM HST WORKSHOP 
 def moment_2(data):
     """ get the second moment to estimate the peak width """
     y, x = np.indices(data.shape)

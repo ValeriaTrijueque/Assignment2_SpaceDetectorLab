@@ -1,29 +1,59 @@
+Valeria Trijueque Cerda
+
 # Assignment2_SpaceDetectorLab
 This assignment is divided in two parts: Part1(HST Calibration Routine), Part2 (Hunga Tonga Analysis Sentinel 2)
 
 # Part1: HST Calibration Routine
-In this part of the assignment, raw data from the Hubble Space Telescope are to be calibrated. The processing needs to be done with the aid of some calibration files provided in the assignment:
+The purpose of this part of the assignment is to calibrate the raw data from the Hubble Space Telescope. This process needs to be done with the aid of some calibration files provided in the assignment:
 
 - MASKFILE
+This file provides information about the bad pixels to mask them from the raw data. 0 represents good pixels, 2 defective pixels and 256 questionable pixels. Therefore, a mask was performed to remove the defective pixels from the raw data. The questionable pixels where not remove because some information was getting lost and a bad quality image produces.
+
 - BLEVFILE
+This file is applied to the mask data to ensure the values stored in the pixels are positive and, in this way, avoid saturation of the pixels and therefore, losing data. This was accomplished by making an overscan region of the pixels that are always covered and then apply this to the masked data by calculating separately the mean of the odd and even overscan regions and subtracting it from the odd and even columns of the masked image.
+
 - BIASFILE
+The data in the bias file compensate for the readout noise. Consequently, it is subtracted from the image being calibrated.
+
 - DARKFILE
+The data in the dark file accounts for the thermal noise. Consequently, it is multiplied by the exposure time and subtracted from the bias corrected image.
+
 - FLATFILE
+The data in the flat file accounts for the pixel sensitivity, which is multiplied by the dark corrected image.
 
-The following formula is needed to apply the calibration:
+- Once all these files were applied to the raw image for calibration an estimation of the sky had to be computed to also remove it from the flat corrected image. The sky estimate was obtained by calculating the mean and standard deviation of the flat corrected image, to then make the median of pixels with a value greater than (mean-3*standev) and smaller than (mean+3*standev).
 
-stars + noise = (raw - bias - dark) / flat - sky
+-To finish photometry calibration was performed with PHOTFLAM, PHOTZPT, and ZP_CORR. The energy flux density was first calculated multiplying the count rate by the PHOTOFLAM (Inverse Sensitivity), and the astronomical magnitude by performing the following calculation:
+magnitude = -2.5*np.log10(fluxdata) + PHOTZPT + ZP_CORR
 
-After that, the calibration files are to be compared against the science-ready files provided in the assignment using quantitative analysis to see how accurate the files have been calibrated compared to the reference.
+After that, the computed calibration files are compared against the science-ready files provided in the assignment using quantitative analysis to see how accurate the files have been calibrated with respect to the reference. 
+The competition was achieved by using histograms, calculating possible sources from both, fitting a 2d gaussian to three astronomical sources and performing some statistical analysis.
+
 
 IMPORTANT
-There are three Jupyter files inside the folder called: HSTubai2505m, HSTubai2507m, HSTubai2508m. In each of these files the respective exposures are calibrated and compared with the science-ready images. This was done to prioritise organisation and provide a clean and easy to understand code. 
-In addition, a python script named "Funcitions" will also be found in the folder. This script containes all the functions used to calibrate the data and do all the quantitative process and analysis. 
+There are three Jupyter notebooks inside the folder called: HSTubai2505m, HSTubai2507m, HSTubai2508m. In each of these notebooks the respective exposures from Huble Space Telescope are calibrated (All exposures files can be found inside the calibration folder of the hst-data) and compared with the science-ready images (which is found inside the F336W folder). This was done to prioritise organisation and provide a clean and easy to understand code. 
+In addition, a python script named "Functions" can also be found in the same place. This script contains all the functions used to calibrate the data and do all the quantitative process and analysis.
+
 
 # Part2: HST Hunga Tonga Analysis Sentinel 2
-In this part of the assignment, Google Earth images of the Hunga Tonga volcano from years 2014, 2016, 2020, 2021, 2022 and 2023 were provided. The main goal is to plot the land area as a function of time, to analyse the variation due to volcano eruption. However, because of high cloud density the land area in 2020 was not calculated satisfactory.
-The Sentinel-2 images of the volcano in 2017, 2018 and 2019 were also provided. In this case the area covered in vegetation had to be calculated and ploted as a function of time.
-After obtaining all this information, the results were compared with the vegetation image provided by Sentinel-2 "Sentinel-2_L2A_NDVI"
+In this part of the assignment the Hunga Tonga volcano was analysed using sentinel-2 and Google Earth images:
+
+SENTINEL-2:
+The Sentinel-2 provides images of the volcano in 2017, 2018 and 2019 years. From these images the area covered in vegetation was calculated for each year and plotted in a graph as a function of time. Given that no volcano eruption occurred during those 3 years, sentinel-2 images are used to analyse the growth in vegetation during that time
+
+This was achieved by applying a mask of the vegetation to the images and calculating the pixel size. 
+
+The pixel is first converted into meters from angular units. Once the width and height of the pixels are obtained, the area of a pixel can be calculated. Knowing the pixel size and the pixels containing the vegetation information, the area covered in vegetation can be obtained by multiplying both values together.
+
+After obtaining all this information, the results were compared with the vegetation image provided by Sentinel-2 "Sentinel-2_L2A_NDVI", performing some statistical analysis of the mean, median, standard deviation and minimum and maximum of both.
+
+GOOGLE EARTH:
+The Google Earth images show the evolution of Hunga Tonga volcano in 2014, 2016, 2020, 2021, 2022 and 2023 years. The main goal is to plot the volcano's land area as a function of time, to analyse its variation due to volcano eruption. However, because of high cloud density, the land area in 2020 was not calculated satisfactory and therefore it is rejected from the graph.
+
+To obtain the land area, a mask of the land was performed. The mask was achieved by converting the rgb images into hsv images and then applying the mask. As in Sentinel-2, the pixel size was calculated but, in this case, using the scale bar provided in the Google Earth images. Once the pixel size and the pixels containing the land information were acquired, both are multiplied to get the land area at specific year.
 
 IMPORTANT
-As in Part1, there is a Jupyter notebook with all the processing done in this part of the assignment for both sentinel-2 and google earth. There is also a python script where the all functions used can be found. 
+As in Part1, there is a Jupyter notebook with all the processing done in this part of the assignment for both sentinel-2 (vegetation analysis) and Google Earth (land area analysis). There is also a python script named "Sentinel" where all functions used can be found. The sentinel-2 files for each year are obtained from the folders "S2_2017-07-12", "S2_2018-07-12", "S2_2019-07-12" in the sentinel-data, and the google earth images for each year are obtained from the folder "White_light" in the sentinel-data.
+
+
+

@@ -85,7 +85,7 @@ def masking(data_mask, raw_data):
     -----------
     masked_raw : 'array' - masked raw data
     """
-    condition = (data_mask == 0) | (data_mask == 256) #remove bad pixels, to provide better data, but not questionable pixels, since it is not necessary and removes a lot of data from the image, creating vertical lines at the top of the image
+    condition = (data_mask == 0) | (data_mask == 256) #remove bad pixels, to provide better data, but not questionable pixels, since it is not necessary and it would remove a lot of data from the image, creating vertical lines at the top of the image
     masked_raw = np.where(condition, raw_data, np.nan)
     return masked_raw
 
@@ -133,7 +133,6 @@ def apply_bias(data_bias, corrected_raw_data):
     bias_correct : 'array' - corrected data from bias
     """
     bias_correct = corrected_raw_data-data_bias
-    bias_correct
     return bias_correct
 
 
@@ -173,7 +172,7 @@ def apply_flat(data_flat, dark_correct):
     return flat_correct
 
 
-def calculate_mean_and_stndev(flat_correct): 
+def sky(flat_correct): 
     """
     Estimate the sky contribution to substract it from the flat corrected image. The sky contribution is estimated by calculating the mean and standard deviation, to then make the median of pixels with a value greater than (mean-3*standev) and smaller than (mean+3*standev).
     
